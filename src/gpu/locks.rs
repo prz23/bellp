@@ -15,9 +15,10 @@ fn tmp_path(filename: &str) -> PathBuf {
 #[derive(Debug)]
 pub struct GPULock(File);
 impl GPULock {
-    pub fn lock() -> GPULock {
+    pub fn lock(lock_no: u32) -> GPULock {
+        let gpu_lock_name_full : String = format!("{}_{}",GPU_LOCK_NAME,lock_no);
         debug!("Acquiring GPU lock...");
-        let f = File::create(tmp_path(GPU_LOCK_NAME)).unwrap();
+        let f = File::create(tmp_path(&gpu_lock_name_full)).unwrap();
         f.lock_exclusive().unwrap();
         debug!("GPU lock acquired!");
         GPULock(f)

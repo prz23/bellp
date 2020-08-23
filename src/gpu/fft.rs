@@ -28,7 +28,18 @@ where
     E: Engine,
 {
     pub fn create(priority: bool) -> GPUResult<FFTKernel<E>> {
-        let lock = locks::GPULock::lock();
+
+        let fft_gpu_no = match env::var("FFT_GPU_NO") {
+            Ok(p) => {
+                info!("FFT_GPU_NO: {}", p);
+                p
+            }
+            Err(_) => 0.to_string(),
+        };
+
+        let fft_gpu_no_u32 = fft_gpu_no.parse::<u32>().unwrap();
+
+        let lock = locks::GPULock::lock(fft_gpu_no_u32);
 
         let devices = opencl::Device::all()?;
         if devices.is_empty() {
@@ -36,7 +47,7 @@ where
         }
 
         // Select the first device for FFT
-        let device = devices[0].clone();
+        let device = devices[fft_gpu_no_u32].clone();
 
         let src = sources::kernel::<E>(device.brand() == opencl::Brand::Nvidia);
 
